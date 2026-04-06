@@ -1,0 +1,162 @@
+"""
+Smart Surveillance & IoT Sensor Dataset Generator
+Generates synthetic sensor streams and activity classification datasets:
+  1. sensor_stream.csv     — IoT multi-sensor time-series (temp, humidity, motion, sound, vibration)
+  2. activity_labels.csv   — Timestamped activity/event labels
+  3. network_traffic.csv   — Network packet feature dataset for intrusion detection
+"""
+
+import numpy as np
+import pandas as pd
+import os
+from datetime import datetime, timedelta
+
+np.random.seed(2025)
+
+BASE = os.path.dirname(__file__)
+OUT  = BASE
+
+N_HOURS   = 24 * 30   # 30 days of hourly data
+START     = datetime(2024, 1, 1, 0, 0, 0)
+
+ACTIVITIES = {
+    "Normal":        {"temp":(20,24), "humidity":(40,60), "motion":(0,0.2), "sound":(25,45), "vibration":(0,0.15), "prob":0.65},
+    "Occupied":      {"temp":(22,27), "humidity":(45,70), "motion":(0.4,1.0),"sound":(50,75), "vibration":(0.1,0.4), "prob":0.20},
+    "Intrusion":     {"temp":(19,25), "humidity":(38,62), "motion":(0.7,1.0),"sound":(60,95), "vibration":(0.3,0.9), "prob":0.05},
+    "Fire_Risk":     {"temp":(35,60), "humidity":(10,35), "motion":(0,0.3), "sound":(40,60), "vibration":(0.1,0.5), "prob":0.05},
+    "Equipment_Fault":{"temp":(28,40),"humidity":(40,65),"motion":(0,0.1), "sound":(55,80), "vibration":(0.6,1.0), "prob":0.05},
+}
+
+
+def sample_sensor(activity_name, n=1):
+    cfg = ACTIVITIES[activity_name]
+    def _rng(lo, hi): return np.random.uniform(lo, hi, n)
+    return {
+        "temperature":  _rng(*cfg["temp"]),
+        "humidity":     _rng(*cfg["humidity"]),
+        "motion":       _rng(*cfg["motion"]),
+        "sound_db":     _rng(*cfg["sound"]),
+        "vibration":    _rng(*cfg["vibration"]),
+    }
+
+
+def generate_sensor_stream(n=N_HOURS):
+    rows = []
+    activity_names = list(ACTIVITIES.keys())
+    probs = [ACTIVITIES[a]["prob"] for a in activity_names]
+
+    for i in range(n):
+        ts = START + timedelta(hours=i)
+        hour = ts.hour
+
+        # Adjust probs by time of day
+        adj_probs = probs.copy()
+        if 8 <= hour <= 18:
+            adj_probs[1] += 0.15   # more Occupied during day
+        if 22 <= hour or hour <= 5:
+            adj_probs[2] += 0.03   # slightly more intrusion risk at night
+        adj_probs = np.array(adj_probs)
+        adj_probs = adj_probs / adj_probs.sum()
+
+        act = np.random.choice(activity_names, p=adj_probs)
+        s   = {k: v[0] for k, v in sample_sensor(act).items()}
+
+        # Add noise
+        s["temperature"] += np.random.normal(0, 0.5)
+        s["humidity"]    += np.random.normal(0, 1.5)
+        s["sound_db"]    += np.random.normal(0, 2.0)
+
+        rows.append({
+            "timestamp":   ts.strftime("%Y-%m-%d %H:%M:%S"),
+            "hour":        hour,
+            "day_of_week": ts.weekday(),
+            "is_night":    int(hour < 7 or hour > 20),
+            "temperature": round(s["temperature"], 2),
+            "humidity":    round(s["humidity"], 2),
+            "motion":      round(s["motion"], 3),
+            "sound_db":    round(s["sound_db"], 2),
+            "vibration":   round(s["vibration"], 3),
+            "activity":    act,
+            "is_anomaly":  int(act in ["Intrusion","Fire_Risk","Equipment_Fault"]),
+        })
+    return pd.DataFrame(rows)
+
+
+def generate_network_traffic(n=5000):
+    """Synthetic network packet features for intrusion detection."""
+    rows = []
+    attack_types = ["Normal","DoS","Port_Scan","Brute_Force","Data_Exfil"]
+    probs = [0.70, 0.10, 0.08, 0.07, 0.05]
+    for i in range(n):
+        att = np.random.choice(attack_types, p=probs)
+        if att == "Normal":
+            pkt_size   = np.random.normal(512, 200)
+            duration   = np.random.exponential(0.05)
+            n_pkts     = np.random.poisson(8)
+            byte_rate  = np.random.normal(4000, 1500)
+            flag_syn   = int(np.random.random() < 0.15)
+            flag_rst   = int(np.random.random() < 0.05)
+            dst_ports  = np.random.choice([80,443,22,53,8080], p=[0.4,0.3,0.1,0.1,0.1])
+            login_attempts = 0
+        elif att == "DoS":
+            pkt_size   = np.random.normal(64, 20)
+            duration   = np.random.exponential(0.001)
+            n_pkts     = np.random.poisson(500)
+            byte_rate  = np.random.normal(80000, 15000)
+            flag_syn   = int(np.random.random() < 0.90)
+            flag_rst   = int(np.random.random() < 0.02)
+            dst_ports  = 80
+            login_attempts = 0
+        elif att == "Port_Scan":
+            pkt_size   = np.random.normal(60, 15)
+            duration   = np.random.exponential(0.002)
+            n_pkts     = np.random.poisson(200)
+            byte_rate  = np.random.normal(12000, 3000)
+            flag_syn   = int(np.random.random() < 0.95)
+            flag_rst   = int(np.random.random() < 0.70)
+            dst_ports  = np.random.randint(1, 65535)
+            login_attempts = 0
+        elif att == "Brute_Force":
+            pkt_size   = np.random.normal(300, 80)
+            duration   = np.random.exponential(0.3)
+            n_pkts     = np.random.poisson(50)
+            byte_rate  = np.random.normal(2000, 500)
+            flag_syn   = int(np.random.random() < 0.50)
+            flag_rst   = int(np.random.random() < 0.10)
+            dst_ports  = 22
+            login_attempts = np.random.randint(10, 200)
+        else:  # Data_Exfil
+            pkt_size   = np.random.normal(1400, 100)
+            duration   = np.random.exponential(5.0)
+            n_pkts     = np.random.poisson(30)
+            byte_rate  = np.random.normal(50000, 10000)
+            flag_syn   = int(np.random.random() < 0.20)
+            flag_rst   = int(np.random.random() < 0.05)
+            dst_ports  = np.random.choice([443,80,21])
+            login_attempts = 0
+
+        rows.append({
+            "packet_id":       i,
+            "packet_size":     max(40, round(pkt_size, 0)),
+            "duration":        round(max(0.0001, duration), 5),
+            "n_packets":       max(1, int(n_pkts)),
+            "byte_rate":       max(100, round(byte_rate, 1)),
+            "flag_syn":        flag_syn,
+            "flag_rst":        flag_rst,
+            "dst_port":        int(dst_ports),
+            "login_attempts":  max(0, login_attempts),
+            "attack_type":     att,
+            "is_attack":       int(att != "Normal"),
+        })
+    return pd.DataFrame(rows)
+
+
+if __name__ == "__main__":
+    sensors = generate_sensor_stream()
+    network = generate_network_traffic()
+
+    sensors.to_csv(os.path.join(OUT, "sensor_stream.csv"),   index=False)
+    network.to_csv(os.path.join(OUT, "network_traffic.csv"), index=False)
+
+    print(f"sensor_stream.csv   : {len(sensors)} records | {sensors['is_anomaly'].mean()*100:.1f}% anomalies")
+    print(f"network_traffic.csv : {len(network)} records | {network['is_attack'].mean()*100:.1f}% attacks")
