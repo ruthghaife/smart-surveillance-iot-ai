@@ -1,18 +1,18 @@
-# 🔐 Smart Surveillance & IoT Anomaly Detection System
+# Smart Surveillance & IoT Anomaly Detection System
 
 > **Author:** Ghaife Mabu Ruth | ruthghaifemaburuth@gmail.com  
 > **Institution:** GNA University, Phagwara, India (B.Sc. Information Technology)  
-> **TEEP Domains Covered:** AI Surveillance · Edge Computing · IoT Sensor Analytics · Network Security · Anomaly Detection
+> **Domains Covered:** AI Surveillance · Edge Computing · IoT Sensor Analytics · Network Security · Anomaly Detection
 
 ---
 
-## 📌 Project Overview
+##  Project Overview
 
 An end-to-end AI-powered smart surveillance and security intelligence platform that processes multi-channel IoT sensor streams and network traffic data to detect anomalies, classify activity events, and simulate real-time alert systems. The system covers both **physical security** (sensor-based) and **cyber security** (network intrusion detection).
 
 ---
 
-## 🎯 What This Project Demonstrates
+##  What This Project Demonstrates
 
 | Module | Task | Output |
 |--------|------|--------|
@@ -23,7 +23,7 @@ An end-to-end AI-powered smart surveillance and security intelligence platform t
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 project3_smart_surveillance/
@@ -47,7 +47,7 @@ project3_smart_surveillance/
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ```bash
 git clone https://github.com/ruthghaife/smart-surveillance-iot-ai.git
@@ -61,7 +61,7 @@ python analysis.py
 
 ---
 
-## 📊 Key Results
+##  Key Results
 
 - **Activity Classification Accuracy:** ~93% (Random Forest on 5 classes)
 - **Intrusion Detection:** RF multi-class accuracy ~94% | Isolation Forest binary baseline
@@ -71,19 +71,7 @@ python analysis.py
 
 ---
 
-## 🔗 Relevance to TEEP Research Programs
-
-| Program | Institution | Connection |
-|---------|-------------|-----------|
-| Deep Learning Video Surveillance #1412 | NTNU | Activity recognition from sensor streams |
-| AI Apps, Edge Computing, DSP #1288 | NCUE | IoT edge processing + signal analysis |
-| Counterfeit Detection DCNN #1116 | Providence | Anomaly pattern classification pipeline |
-| ML in Electronic Reliability #956 | Chang Gung | Fault detection (Equipment_Fault class) |
-| AI Cross-disciplinary #1488 | Fo Guang | Interdisciplinary AI application |
-
----
-
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ```
 Python 3.x · Scikit-learn (RF, GB, IsolationForest, KNN, PCA) · Pandas · NumPy · Matplotlib · Seaborn
@@ -91,8 +79,8 @@ Python 3.x · Scikit-learn (RF, GB, IsolationForest, KNN, PCA) · Pandas · NumP
 
 ---
 
-## 📬 Contact
+##  Contact
 
 **Ghaife Mabu Ruth**  
 ruthghaifemaburuth@gmail.com | +91 9501385794  
-🇨🇲 Cameroon → 🇮🇳 GNA University, India → 🇹🇼 Taiwan (target)
+🇨🇲 Cameroon → 🇮🇳 GNA University, India 
